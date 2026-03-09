@@ -127,7 +127,7 @@ for i=1:load_case_rows
     mpc.bus(24,PD) = load_cases(i,10); %PD
     mpc.bus(24,QD) = sqrt((load_cases(i,10)/PF)^2 - load_cases(i,10)^2); %Calculates QD from PD
     
-    % Iterating through Gen_cases to show which generators are on and off
+    % Josh Iterating through Gen_cases to show which generators are on and off
     for j=1:gen_cases_rows
         %Changing generator status using Gen_cases and iteration variable j
             %put code here
