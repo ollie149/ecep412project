@@ -14,7 +14,7 @@ clc
     QC2MIN, QC2MAX, RAMP_AGC, RAMP_10, RAMP_30, RAMP_Q, APF] = idx_gen;
 
 %% read data
-casedata = 'FinalProjectcase.m';
+casedata = 'FinalProjectCase.m';
 verbose = 2;
 mpc = loadcase(casedata);
 [nl,~] = size(mpc.branch);
@@ -127,10 +127,33 @@ for i=1:load_case_rows
     mpc.bus(24,PD) = load_cases(i,10); %PD
     mpc.bus(24,QD) = sqrt((load_cases(i,10)/PF)^2 - load_cases(i,10)^2); %Calculates QD from PD
     
-    % Josh Iterating through Gen_cases to show which generators are on and off
-    for j=1:gen_cases_rows
+    % Done by Josh Iterating through Gen_cases to show which generators are on and off
+    % n-1 results here:
+    PG_matrix = zeros(ng, ng);
+    QG_matrix = zeros(ng, ng);
+    viol_matrix = zeros(ng, ng);
+    for j=1:ng
         %Changing generator status using Gen_cases and iteration variable j
             %put code here
+            if (mpc.gen(j, GEN_STATUS) == 1)
+                mpc.gen(j, GEN_STATUS) = 0;
+                [resultsNR, successNR]  = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
+                mpc.gen(j, GEN_STATUS) = 1;
+
+                num_gen = size(resultsNR.gen,1);
+                for i=1:num_gen
+                    PG_matrix(j,i) = resultsNR.gen(i,PG);
+                    QG_matrix(j,i) = resultsNR.gen(i,QG);
+                    if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
+                        viol_matrix(j,i) = 0; % no violation
+                    else
+                        viol_matrix(j,i) = 1; % violation
+                    end
+                     fprintf('Gen %d: PG = %.3f, QG = %.3f, Violation = %d\n', i, resultsNR.gen(i,PG), resultsNR.gen(i,QG), viol_matrix(i));
+                end
+            end
+    end
+
 
         %Run power flow
         [resultsNR, successNR]  = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
@@ -149,8 +172,7 @@ for i=1:load_case_rows
         end
         %Optimal Generator Lineup (part 3d) - kind of confused where
             %put code here
-    end
-end    
+end
 
 %mdo = most(mdi);
 %ms = most_summary(mdo);
