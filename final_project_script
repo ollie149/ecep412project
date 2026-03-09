@@ -129,34 +129,39 @@ for i=1:load_case_rows
     
     % Josh Iterating through Gen_cases to show which generators are on and off
     % n-1 results here:
-    PG_matrix = zeros(load_case_rows, ng, ng);
+PG_matrix = zeros(load_case_rows, ng, ng);
     QG_matrix = zeros(load_case_rows, ng, ng);
-    viol_matrix = zeros(load_case_rows, ng);
-    for k=1:load_case_rows
-        for j=1:ng
-            %Changing generator status using Gen_cases and iteration variable j
-            %put code here
+    viol_matrix = zeros(load_case_rows, ng, ng);
+
+    for k = 1:load_case_rows
+        for j = 1:ng
             if (mpc.gen(j, GEN_STATUS) == 1)
                 mpc.gen(j, GEN_STATUS) = 0;
-                [resultsNR, successNR]  = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
+                [resultsNR, successNR] = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
                 mpc.gen(j, GEN_STATUS) = 1;
 
                 num_gen = size(resultsNR.gen,1);
+
                 if successNR == 1
-                    for i=1:num_gen
-                        PG_matrix(load_case_rows,i) = resultsNR.gen(i,PG);
-                        QG_matrix(load_case_rows,i) = resultsNR.gen(i,QG);
-                        if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
-                            viol_matrix(load_case_rows,i) = 0; % no violation
+                    for i = 1:num_gen
+                        PG_matrix(k,j,i) = resultsNR.gen(i,PG);
+                        QG_matrix(k,j,i) = resultsNR.gen(i,QG);
+
+                        if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && ...
+                                resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && ...
+                                resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && ...
+                                resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
+                            viol_matrix(k,j,i) = 0; % no violation
                         else
-                            viol_matrix(load_case_rows,i) = 1; % violation
+                            viol_matrix(k,j,i) = 1; % violation
                         end
-                        fprintf('Gen %d: PG = %.3f, QG = %.3f, Violation = %d\n', i, resultsNR.gen(i,PG), resultsNR.gen(i,QG), viol_matrix(i));
+                        fprintf('Load case %d, Outage %d, Gen %d: PG = %.3f, QG = %.3f, Violation = %d\n', k, j, i, resultsNR.gen(i,PG), resultsNR.gen(i,QG), viol_matrix(k,j,i));
                     end
                 end
             end
         end
     end
+
 
 
         %Run power flow
