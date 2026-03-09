@@ -1,0 +1,156 @@
+%% ECEP 412 - Final Project
+clear 
+close all
+clc
+
+%% define named indices into bus, gen, branch matrices
+[PQ, PV, REF, NONE, BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, ...
+    VA, BASE_KV, ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN] = idx_bus;
+[F_BUS, T_BUS, BR_R, BR_X, BR_B, RATE_A, RATE_B, RATE_C, ...
+    TAP, SHIFT, BR_STATUS, PF, QF, PT, QT, MU_SF, MU_ST, ...
+    ANGMIN, ANGMAX, MU_ANGMIN, MU_ANGMAX] = idx_brch;
+[GEN_BUS, PG, QG, QMAX, QMIN, VG, MBASE, GEN_STATUS, PMAX, PMIN, ...
+    MU_PMAX, MU_PMIN, MU_QMAX, MU_QMIN, PC1, PC2, QC1MIN, QC1MAX, ...
+    QC2MIN, QC2MAX, RAMP_AGC, RAMP_10, RAMP_30, RAMP_Q, APF] = idx_gen;
+
+%% read data
+casedata = 'FinalProjectcase.m';
+verbose = 2;
+mpc = loadcase(casedata);
+[nl,~] = size(mpc.branch);
+[ng,~] = size(mpc.gen);
+
+mdi = loadmd(mpc);
+%% Set up options for AC Power Flow using Newton-Raphson
+pffname=strcat(casedata,'_AC_NR_PrettyPrint.txt');
+pfsolvedcase=strcat(casedata,'_AC_NR_SolvedCase');
+pfsolvedcase_HWT=strcat(casedata,'_AC_NR_SolvedCase_HWT');
+mpopt = mpoption;
+mpopt = mpoption('PF_ALG', 1, 'PF_TOL', 1e-6, 'VERBOSE', verbose);
+
+%% Creating Binary Values for Optimal generator line up and Generator Loading
+Gen_cases = flip(decimalToBinaryVector(0:63, 6), 1);
+
+%% Load Cases and values
+
+%xfmr
+xfmr_R = 0.2; %ohms
+xfmr_SR = 5.75; %p.u.
+
+%generator
+gen_SR = 3; %p.u.
+
+%   9=5LA  11=5LB  13=6LA  15=7LB  1=1LB   3=2LA    5=4LA    7=4LB   23=APS1  24=APS2
+load_cases=[
+    1    1    1    1    1.5    1.5    1.5    1.5    0    0;
+    1    1    1    1    1.5    1.5    1.5    1.5    0.5    0.5;
+    1    1    1    1    1.5    1.5    1.5    1.5    1    1;
+    1    1    1    1    1.5    1.5    1.5    1.5    1.5    1.5;
+    1    1    1    1    1.5    1.5    1.5    1.5    2    2;
+    1    1    1    1    1.5    1.5    1.5    1.5    2.5    2.5;
+    1    1    1    1    1.5    1.5    1.5    1.5    3    3;
+    1    1    1    1    1.5    1.5    1.5    1.5    3.5    3.5;
+    1    1    1    1    1.5    1.5    1.5    1.5    4    4;
+    1    1    1    1    2    2    2    2    0    0;
+    1    1    1    1    2    2    2    2    0.5    0.5;
+    1    1    1    1    2    2    2    2    1    1;
+    1    1    1    1    2    2    2    2    1.5    1.5;
+    1    1    1    1    2    2    2    2    2    2;
+    1    1    1    1    2    2    2    2    2.5    2.5;
+    1    1    1    1    2    2    2    2    3    3;
+    1    1    1    1    2    2    2    2    3.5    3.5;
+    1    1    1    1    2    2    2    2    4    4;
+    1    1    1    1    2.5    2.5    2.5    2.5    0    0;
+    1    1    1    1    2.5    2.5    2.5    2.5    0.5    0.5;
+    1    1    1    1    2.5    2.5    2.5    2.5    1    1;
+    1    1    1    1    2.5    2.5    2.5    2.5    1.5    1.5;
+    1    1    1    1    2.5    2.5    2.5    2.5    2    2;
+    1    1    1    1    2.5    2.5    2.5    2.5    2.5    2.5;
+    1    1    1    1    2.5    2.5    2.5    2.5    3    3;
+    1    1    1    1    2.5    2.5    2.5    2.5    3.5    3.5;
+    1    1    1    1    2.5    2.5    2.5    2.5    4    4;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    0    0;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    0.5    0.5;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1    1;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    2    2;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    2.5    2.5;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    3    3;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    3.5    3.5;
+    1.5    1.5    1.5    1.5    1.5    1.5    1.5    1.5    4    4;
+    1.5    1.5    1.5    1.5    2    2    2    2    0    0;
+    1.5    1.5    1.5    1.5    2    2    2    2    0.5    0.5;
+    1.5    1.5    1.5    1.5    2    2    2    2    1    1;
+    1.5    1.5    1.5    1.5    2    2    2    2    1.5    1.5;
+    1.5    1.5    1.5    1.5    2    2    2    2    2    2;
+    1.5    1.5    1.5    1.5    2    2    2    2    2.5    2.5;
+    1.5    1.5    1.5    1.5    2    2    2    2    3    3;
+    1.5    1.5    1.5    1.5    2    2    2    2    3.5    3.5;
+    1.5    1.5    1.5    1.5    2    2    2    2    4    4;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    0    0;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    0.5    0.5;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    1    1;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    1.5    1.5;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    2    2;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    2.5    2.5;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    3    3;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    3.5    3.5;
+    1.5    1.5    1.5    1.5    2.5    2.5    2.5    2.5    4    4;];
+
+
+%% Part 3 a,b,c,d
+
+%9=5LA  11=5LB  13=6LA  15=7LB  1=1LB   3=2LA    5=4LA    7=4LB   23=APS1  24=APS2
+% Iterated over load_cases for variable loads (updating mpc)
+load_case_rows = size(load_cases,1);
+gen_cases_rows = size(Gen_cases,1);
+PF=0.8; %Lagging
+for i=1:load_case_rows
+    mpc.bus(9,PD) = load_cases(i,1); %PD
+    mpc.bus(9,QD) = sqrt((load_cases(i,1)/PF)^2 - load_cases(i,1)^2); %Calculates QD from PD
+    mpc.bus(11,PD) = load_cases(i,2); %PD
+    mpc.bus(11,QD) = sqrt((load_cases(i,2)/PF)^2 - load_cases(i,2)^2); %Calculates QD from PD
+    mpc.bus(13,PD) = load_cases(i,3); %PD
+    mpc.bus(13,QD) = sqrt((load_cases(i,3)/PF)^2 - load_cases(i,3)^2); %Calculates QD from PD
+    mpc.bus(15,PD) = load_cases(i,4); %PD
+    mpc.bus(15,QD) = sqrt((load_cases(i,4)/PF)^2 - load_cases(i,4)^2); %Calculates QD from PD
+    mpc.bus(1,PD) = load_cases(i,5); %PD
+    mpc.bus(1,QD) = sqrt((load_cases(i,5)/PF)^2 - load_cases(i,5)^2); %Calculates QD from PD
+    mpc.bus(3,PD) = load_cases(i,6); %PD
+    mpc.bus(3,QD) = sqrt((load_cases(i,6)/PF)^2 - load_cases(i,6)^2); %Calculates QD from PD
+    mpc.bus(5,PD) = load_cases(i,7); %PD
+    mpc.bus(5,QD) = sqrt((load_cases(i,7)/PF)^2 - load_cases(i,7)^2); %Calculates QD from PD
+    mpc.bus(7,PD) = load_cases(i,8); %PD
+    mpc.bus(7,QD) = sqrt((load_cases(i,8)/PF)^2 - load_cases(i,8)^2); %Calculates QD from PD
+    mpc.bus(23,PD) = load_cases(i,9); %PD
+    mpc.bus(23,QD) = sqrt((load_cases(i,9)/PF)^2 - load_cases(i,9)^2); %Calculates QD from PD
+    mpc.bus(24,PD) = load_cases(i,10); %PD
+    mpc.bus(24,QD) = sqrt((load_cases(i,10)/PF)^2 - load_cases(i,10)^2); %Calculates QD from PD
+    
+    % Iterating through Gen_cases to show which generators are on and off
+    for j=1:gen_cases_rows
+        %Changing generator status using Gen_cases and iteration variable j
+            %put code here
+
+        %Run power flow
+        [resultsNR, successNR]  = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
+
+        %Analyzing Power Flow Per Generator
+        for k=1:ng
+            %Check Generator Real and Reactive Generator Ranges and if NR was successful
+                %Put code here
+            %Generator Power Ouput (part 3a)
+                % (Put Real Power into a vector with number of Generator Case and load case)
+                %put code here 
+            %Generator Current (part 3b) (Buses 17-21 are the generator buses)
+                %Calcuate using Gen Real/Reactive Power and Bus voltage (convert it to voltage from pu and remember the angle)
+                %put into vector with number of generator case and load case
+                %put code here
+        end
+        %Optimal Generator Lineup (part 3d) - kind of confused where
+            %put code here
+    end
+end    
+
+%mdo = most(mdi);
+%ms = most_summary(mdo);
