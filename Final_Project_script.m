@@ -33,7 +33,7 @@ Gen_cases = flip(decimalToBinaryVector(1:63, 6), 1);
 
 %% Load Cases and values
 
-%   9=5LA  11=5LB  13=6LA  15=7LB  1=1LB   3=2LA    5=4LA    7=4LB   23=APS1  24=APS2
+%   9=5LA  11=5LB  13=6LA  15=7LB  1=1LB   3=2LA    5=4LA    7=4LB   18=APS1  17=APS2
 load_cases=[
     1    1    1    1    1.5    1.5    1.5    1.5    0    0;
     1    1    1    1    1.5    1.5    1.5    1.5    0.5    0.5;
@@ -142,8 +142,11 @@ for h=1:load_case_rows
                 final_results(i_r,2+i) = resultsNR.gen(i,PG);
                 final_results(i_r,8+i) = resultsNR.gen(i,QG);
                 
-%-----------    current calc needs added
-                    final_results(i_r,14+i) = 0; %Add formula here
+                %current calc needs added
+                bus_idx = resultsNR.gen(i, GEN_BUS);
+                V_LL = resultsNR.bus(bus_idx, VM) * resultsNR.bus(bus_idx, BASE_KV); 
+                S_total_VA = sqrt(resultsNR.gen(i, PG)^2 + resultsNR.gen(i, QG)^2) * 1e6;
+                final_results(i_r, 14+i) = S_total_VA / (sqrt(3) * V_LL);
                 
                 %Checks for generator violations    
                 if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
