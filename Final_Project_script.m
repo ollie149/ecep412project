@@ -99,66 +99,65 @@ load_case_rows = size(load_cases,1);
 gen_cases_rows = size(Gen_cases,1);
 PF=0.8; %Lagging
 
+
 %Final Results Array
 %Columns: # Load Case=1, # of Gen Case=2, Real Power=3-8, Reactive Power=9-14,Current=15-20, Gen Violation=21-26, Optimal Loading=27
 load_gen_num = load_case_rows*gen_cases_rows;
 final_results = zeros(load_gen_num,27);
 i_r = 1;
 
+%vector of load buses for iteration
 buses = [9 11 13 15 1 3 5 7 18 17];
 
 for h=1:load_case_rows
     mpc = mpc0;
+    
+    %Goes through vector of Load Cases 
     for k = 1:10
         mpc.bus(buses(k),PD) = load_cases(h,k);
         mpc.bus(buses(k),QD) = sqrt((load_cases(h,k)/PF)^2 - (load_cases(h,k))^2);
     end
     
+    %Goes through the rows of generator loading cases
     for g=1:gen_cases_rows
+        
         %Changing generator status using Gen_cases and iteration variable j
         for j=1:ng
             mpc.gen(j, GEN_STATUS) = Gen_cases(g,j);
         end
 
+        %Runs Power Flow
         [resultsNR, successNR] = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
-                
+        
+        %Puts the Load Case # and Generator Case # in vector
         final_results(i_r,1) = h;
         final_results(i_r,2) = g;
         
+        %See if the power flow is a success
         if successNR == 1
+            %if it is a success then it iterates through the generators
             for i=1:ng
+                %Inputs the Real and Reactive Powers into the Results vector
                 final_results(i_r,2+i) = resultsNR.gen(i,PG);
                 final_results(i_r,8+i) = resultsNR.gen(i,QG);
-
+                %current calc needs added
+                    %code
+                
+                %Checks for generator violations    
                 if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
                     final_results(i_r,20+i) = 0; % no violation
                 else
                     final_results(i_r,20+i) = 1; % violation
                 end
             end    
+        %If the power flow is not a success writes Na
         else
-            final_results(i_r,3:27) = NaN;
+            final_results(i_r,3:27) = 'N/a';
         end
 
         i_r= i_r+1; %Adds 1 to the iteration variable for the Final Results Vector
     end    
 end
 
-
-%Analyzing Power Flow Per Generator
-        %for k=1:ng
-            %Check Generator Real and Reactive Generator Ranges and if NR was successful
-                %Put code here
-            %Generator Power Ouput (part 3a)
-                % (Put Real Power into a vector with number of Generator Case and load case)
-                %put code here 
-            %Generator Current (part 3b) (Buses 17-21 are the generator buses)
-                %Calcuate using Gen Real/Reactive Power and Bus voltage (convert it to voltage from pu and remember the angle)
-                %put into vector with number of generator case and load case
-                %put code here
-        %end
-        %Optimal Generator Lineup (part 3d) - kind of confused where
-            %put code here
-
-%mdo = most(mdi);
-%ms = most_summary(mdo);
+%find optimal power flow for each case
+    %code
