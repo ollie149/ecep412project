@@ -119,6 +119,7 @@ for h=1:load_case_rows
     end
     
     %Goes through the rows of generator loading cases
+    m=63; %for column 2 of final results gen case number
     for g=1:gen_cases_rows
         
         %Changing generator status using Gen_cases and iteration variable j
@@ -131,7 +132,7 @@ for h=1:load_case_rows
         
         %Puts the Load Case # and Generator Case # in vector
         final_results(i_r,1) = h;
-        final_results(i_r,2) = g;
+        final_results(i_r,2) = m;
         
         %See if the power flow is a success
         if successNR == 1
@@ -140,8 +141,9 @@ for h=1:load_case_rows
                 %Inputs the Real and Reactive Powers into the Results vector
                 final_results(i_r,2+i) = resultsNR.gen(i,PG);
                 final_results(i_r,8+i) = resultsNR.gen(i,QG);
-                %current calc needs added
-                    %code
+                
+%-----------    current calc needs added
+                    final_results(i_r,14+i) = 0; %Add formula here
                 
                 %Checks for generator violations    
                 if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
@@ -154,10 +156,13 @@ for h=1:load_case_rows
         else
             final_results(i_r,3:27) = 'N/a';
         end
-
+        
         i_r= i_r+1; %Adds 1 to the iteration variable for the Final Results Vector
-    end    
+        m=m-1; %Makes the iteration variable go from 63-1
+    end  
+%---find optimal power flow for each case
+    %code
+    %final_results(i_r,27)=0; %Add optimal power flow case to column 27 for each load case
 end
 
-%find optimal power flow for each case
-    %code
+
