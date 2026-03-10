@@ -97,7 +97,7 @@ load_cases=[
 % Iterated over load_cases for variable loads (updating mpc)
 load_case_rows = size(load_cases,1);
 gen_cases_rows = size(Gen_cases,1);
-PF=0.8; %Lagging
+Power_Factor=0.8; %Lagging
 
 
 %Final Results Array
@@ -115,7 +115,7 @@ for h=1:load_case_rows
     %Goes through vector of Load Cases 
     for k = 1:10
         mpc.bus(buses(k),PD) = load_cases(h,k);
-        mpc.bus(buses(k),QD) = sqrt((load_cases(h,k)/PF)^2 - (load_cases(h,k))^2);
+        mpc.bus(buses(k),QD) = sqrt((load_cases(h,k)/Power_Factor)^2 - (load_cases(h,k))^2);
     end
     
     %Goes through the rows of generator loading cases
