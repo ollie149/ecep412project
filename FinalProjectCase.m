@@ -1,4 +1,4 @@
-function [baseMVA, bus, gen, branch, areas, gencost] = caseEagleBase
+function [baseMVA, bus, gen, branch, areas, gencost] = FinalProjectCase
 % caseEagleBase    Power flow data for 17 bus, 3 generator case.
 %   Please see 'help caseformat' for details on the case file format.
 
@@ -19,8 +19,8 @@ b_unit = 0.0084 / Z_base_HB;
 
 % --- EQUIPMENT SPECS (Already in p.u. or converted) ---
 r_trans = 0.2 / Z_base_HB;   % 0.2 Ohms converted to p.u.
-x_trans = 5.75;              % dafis gave in p.u.
-x_gen   = 3.0;               % dafis gave in p.u.
+x_trans = 0.0575;              % dafis gave in p.u.
+x_gen   = 0.3;               % dafis gave in p.u.
 r_gen   = 0.0001;            % Negligible r for gen dummy branch
 
 
@@ -28,38 +28,38 @@ r_gen   = 0.0001;            % Negligible r for gen dummy branch
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 bus = [
     % --- ORIGINAL BUSES (Changed from type 2/3 to type 1 switchboards) ---
-	1	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%1LB
-	2	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%1HB (Was type 3, now type 1)	
-	3	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%2LA
-	4	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%2HA	
-	5	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%4LA
-	6	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%4HA
-	7	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%4LB
-	8	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%4HB
-	9	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%5LA
-	10	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%5HA
-	11	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%5LB
-	12	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%5HB
-	13	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%6LA
-	14	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%6HA													
-	15	1	0	0	0	0	1	1		0	450		1	1.1		0.9;	%7LB
-	16	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%7HB
-    17	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%APS 1
-    18	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%APS 2
-    19	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%1SG (Switchboard only)
-    20	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%2SG (Switchboard only)
-    21	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%3SG (Switchboard only)
-    22	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%4SG (Switchboard only)
-    23	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%5SG (Switchboard only)
-    24	1	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%6SG (Switchboard only)
+	1	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%1LB
+	2	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%1HB (Was type 3, now type 1)	
+	3	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%2LA
+	4	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%2HA	
+	5	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%4LA
+	6	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%4HA
+	7	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%4LB
+	8	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%4HB
+	9	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%5LA
+	10	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%5HA
+	11	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%5LB
+	12	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%5HB
+	13	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%6LA
+	14	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%6HA													
+	15	1	0	0	0	0	1	1		0	1		1	1.1		0.9;	%7LB
+	16	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%7HB
+    17	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%APS 1
+    18	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%APS 2
+    19	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%1SG (Switchboard only)
+    20	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%2SG (Switchboard only)
+    21	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%3SG (Switchboard only)
+    22	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%4SG (Switchboard only)
+    23	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%5SG (Switchboard only)
+    24	1	0	0	0	0	1	1		0	1	1	1.1		0.9;	%6SG (Switchboard only)
     
     % --- NEW GENERATOR DUMMY BUSES ---
-    25	3	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 1 Dummy (SLACK BUS)
-    26	2	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 2 Dummy
-    27	2	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 3 Dummy
-    28	2	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 4 Dummy
-    29	2	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 5 Dummy
-    30	2	0	0	0	0	1	1		0	4160	1	1.1		0.9;	%DG 6 Dummy
+    25	3	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 1 Dummy (SLACK BUS)
+    26	2	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 2 Dummy
+    27	2	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 3 Dummy
+    28	2	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 4 Dummy
+    29	2	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 5 Dummy
+    30	2	0	0	0	0	1	1		0	1	1	1.1		0.9;	%DG 6 Dummy
 ];
 
 %% generator data
