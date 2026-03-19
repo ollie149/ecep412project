@@ -4,30 +4,30 @@ function [baseMVA, bus, gen, branch, areas, gencost] = FinalProjectCase
 
 %%-----  Power Flow Data  -----%%
 %% system MVA base
-baseMVA = 10;
+baseMVA = 5;
 
 %%-----  VARIABLES & PER-UNIT CONVERSIONS  -----%%
 % --- SYSTEM BASE VALUES ---
-S_base = 10;          % 10 MVA System Base
+S_base = 5;          % MVA System Base
 V_base_HV = 4.16;     % 4160V zone
 V_base_LV = 0.45;     % 450V zone
 Z_base_HV = (V_base_HV^2) / S_base; 
 Z_base_LV = (V_base_LV^2) / S_base; 
 
 % --- 4160 CABLE SPECS (250kcmil, Converted to p.u. per 1000ft) ---
-r_unit_HV = 0.053 / Z_base_HV; 
-x_unit_HV = 0.038 / Z_base_HV;
+r_unit_HV = 0.033 / Z_base_HV; 
+x_unit_HV = 0.029 / Z_base_HV;
 b_unit = 0.0; % literally 0 here with these lengths
 
 % --- 450V CABLE SPECS (250kcmil, Converted to p.u. per 1000ft) ---
-r_unit_LV = 0.090 / Z_base_LV; 
-x_unit_LV = 0.034 / Z_base_LV;
+r_unit_LV = 0.022 / Z_base_LV; 
+x_unit_LV = 0.038 / Z_base_LV;
 b_unit = 0.0; % literally 0 here with these lengths
 
 % --- EQUIPMENT SPECS (Already in p.u. or converted) ---
 r_trans = 0.2 / Z_base_HV;   % 0.2 Ohms converted to p.u.
 x_trans = 0.0575;              % dafis gave in p.u.
-x_gen   = 0.3;               % dafis gave in p.u.
+x_gen   = 0.03;               % dafis gave in p.u.
 r_gen   = 0.0001;            % Negligible r for gen dummy branch
 
 
