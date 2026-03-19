@@ -126,7 +126,16 @@ for h=1:load_case_rows
         for j=1:ng
             mpc.gen(j, GEN_STATUS) = Gen_cases(g,j);
         end
+        active = mpc.gen(:, GEN_STATUS) == 1;
+        total_load = sum(mpc.bus(:, PD));
+        
+        % Equal sharing among active generators
+        Pg_share = total_load / sum(active);
 
+        Pg = min(Pg_share, mpc.gen(:, PMAX));
+        
+        mpc.gen(:, PG) = 0;
+        mpc.gen(active, PG) = Pg(active);
         %Runs Power Flow
         [resultsNR, successNR] = runpfLabVersion(mpc, mpopt, pffname, pfsolvedcase);
         
@@ -145,19 +154,33 @@ for h=1:load_case_rows
                 %current calc needs added
                 bus_idx = resultsNR.gen(i, GEN_BUS);
                 V_LL = resultsNR.bus(bus_idx, VM) * resultsNR.bus(bus_idx, BASE_KV); 
-                S_total_VA = sqrt(resultsNR.gen(i, PG)^2 + resultsNR.gen(i, QG)^2) * 1e6;
+                S_total_VA = sqrt(resultsNR.gen(i, PG)^2 + resultsNR.gen(i, QG)^2);
                 final_results(i_r, 14+i) = S_total_VA / (sqrt(3) * V_LL);
                 
                 %Checks for generator violations    
-                if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN) && resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX) && resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN) && resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX))
-                    final_results(i_r,20+i) = 0; % no violation
+
+                tol = 1e-3;
+                
+                if resultsNR.gen(i, GEN_STATUS) == 1
+                
+                    if (resultsNR.gen(i,PG) >= resultsNR.gen(i,PMIN)-tol && ...
+                        resultsNR.gen(i,PG) <= resultsNR.gen(i,PMAX)+tol && ...
+                        resultsNR.gen(i,QG) >= resultsNR.gen(i,QMIN)-tol && ...
+                        resultsNR.gen(i,QG) <= resultsNR.gen(i,QMAX)+tol)
+                
+                        final_results(i_r,20+i) = 0; % no violation
+                
+                    else
+                        final_results(i_r,20+i) = 1; % violation
+                    end
+                
                 else
-                    final_results(i_r,20+i) = 1; % violation
+                    final_results(i_r,20+i) = 0; % generator off 
                 end
             end    
         %If the power flow is not a success writes Na
         else
-            final_results(i_r,3:27) = 'N/a';
+            final_results(i_r,3:27) = NaN;
         end
         
         i_r= i_r+1; %Adds 1 to the iteration variable for the Final Results Vector
@@ -166,6 +189,13 @@ for h=1:load_case_rows
 %---find optimal power flow for each case
     %code
     %final_results(i_r,27)=0; %Add optimal power flow case to column 27 for each load case
+    for h = 1:load_case_rows
+        rows = find(final_results(:,1) == h & ~isnan(final_results(:,3)) & all(final_results(:,21:26) == 0,2));
+        if length(rows) > 0;
+            [~,row_num] = min(sum(final_results(rows,3:8)>0,2));
+            final_results(rows(row_num), 27) = 1;
+        end
+    end
 end
 
 
